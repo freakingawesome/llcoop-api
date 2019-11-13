@@ -10,6 +10,7 @@ export class LLCoopApi extends cdk.Stack {
       code: new lambda.AssetCode('src'),
       handler: 'checked-out-resources.handler',
       runtime: lambda.Runtime.NODEJS_10_X,
+      timeout: cdk.Duration.seconds(10),
     });
 
     const api = new apigateway.RestApi(this, 'llcoopApi', {
