@@ -1,0 +1,25 @@
+{
+  "name": "llcoop-api",
+  "version": "1.0.0",
+  "description": "A lil aggregator for checkout out resources at my local library",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "author": {
+    "name": "Chad Gilbert <chad@freakingawesome.net>",
+    "url": "https://freakingawesome.net"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^10.17.5",
+    "fetch-cookie": "^0.7.3",
+    "node-fetch": "^2.6.0",
+    "tough-cookie": "^3.0.1",
+    "typescript": "~3.6.4"
+  },
+  "dependencies": {
+    "node-html-parser": "^1.1.16"
+  }
+}
