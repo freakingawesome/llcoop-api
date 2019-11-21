@@ -21,6 +21,10 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
         const selector = row.querySelector(clazz);
         return selector ? selector.structuredText : null;
       };
+      const getAtt = (clazz:string, att:string) : string => {
+        const selector = row.querySelector(clazz);
+        return selector && selector.attributes ? selector.attributes[att] : null;
+      };
 
       const renewed = get(".patFuncRenewCount");
 
@@ -30,6 +34,7 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
         who: cred.name,
         title,
         acknowledgements,
+        image: generateImageUrl(getAtt(".patFuncTitle a", "href")),
         status: get(".patFuncStatus").replace(renewed, "").replace(/(\d\d-\d\d)-(\d\d)/, "20$2-$1").trim(),
         renewed,
       };
@@ -70,6 +75,16 @@ interface LLCoopCredentials {
   name: string;
   barcode: string;
   pin: string;
+}
+
+function generateImageUrl(href : string) {
+  if (href) {
+    var matches = /\/record=([a-zA-Z0-9]+)~/.exec(href);
+    if (matches) {
+      return llcoopUrl("/bookjacket?recid=" + matches[1]);
+    }
+  }
+  return null;
 }
 
 function splitTitleAndAcknowledgements(s : string) {
