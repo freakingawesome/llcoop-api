@@ -16,7 +16,7 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
     const itemsResponse = await fetch(itemsUrl);
     const root = parse(await itemsResponse.text());
 
-    return (root as any).querySelectorAll("tr.patFuncEntry").map((row:any) => {
+    var result : [] = (root as any).querySelectorAll("tr.patFuncEntry").map((row:any) => {
       const get = (clazz:string) : string => {
         const selector = row.querySelector(clazz);
         return selector ? selector.structuredText : null;
@@ -24,13 +24,20 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
 
       const renewed = get(".patFuncRenewCount");
 
+      const { title, acknowledgements } = splitTitleAndAcknowledgements(get(".patFuncTitleMain"));
+
       return {
         who: cred.name,
-        title: get(".patFuncTitleMain"),
+        title,
+        acknowledgements,
         status: get(".patFuncStatus").replace(renewed, "").replace(/(\d\d-\d\d)-(\d\d)/, "20$2-$1").trim(),
         renewed,
       };
     });
+
+    result.sort((a:any, b:any) => a.status < b.status ? -1 : (a.status === b.status ? 0 : 1));
+
+    return result;
   }
   return [];
 };
@@ -63,4 +70,15 @@ interface LLCoopCredentials {
   name: string;
   barcode: string;
   pin: string;
+}
+
+function splitTitleAndAcknowledgements(s : string) {
+  const slash = s.indexOf(" / ");
+  if (slash >= 0) {
+    return {
+      title: s.substring(0, slash),
+      acknowledgements: s.substring(slash + 3).split(" ; ")
+    };
+  }
+  return { title: s };
 }
