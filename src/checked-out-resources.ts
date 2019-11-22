@@ -1,10 +1,11 @@
 const nodeFetch = require('node-fetch');
 const tough = require('tough-cookie');
 import { parse } from 'node-html-parser';
-
-const llcoopUrl = (pathAndQuery: string) => "https://sam.llcoop.org" + pathAndQuery;
+// import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 
 const getCheckedOutItems = async (cred: LLCoopCredentials) => {
+  const llcoopUrl = (pathAndQuery: string) => cred.rootUrl + pathAndQuery;
   const url = llcoopUrl("/patroninfo");
   const fetch = require('fetch-cookie/node-fetch')(nodeFetch, new tough.CookieJar());
   const response = await fetch(url, { method: "POST", body: `code=${cred.barcode}&pin=${cred.pin}`, headers: {"Content-Type":"application/x-www-form-urlencoded"} });
@@ -33,14 +34,16 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
       const status = get(".patFuncStatus").replace(renewed, "").replace(/(\d\d-\d\d)-(\d\d)/, "20$2-$1").trim();
       const dueMatch = /DUE\s+(\d{4}-\d{2}-\d{2})/.exec(status);
       const due = dueMatch ? dueMatch[1] : null;
+      const dueInDays = due ? moment.tz(`${due}T23:59:59`, cred.tz).diff(moment(), "days") : null;
 
       return {
         who: cred.name,
         title,
         acknowledgements,
-        image: generateImageUrls(getAtt(".patFuncTitle a", "href")),
+        image: generateImageUrls(getAtt(".patFuncTitle a", "href"), llcoopUrl),
         status,
         due,
+        dueInDays,
         renewed,
       };
     });
@@ -77,12 +80,14 @@ export const handler = async (event: any = {}) : Promise <any> => {
 };
 
 interface LLCoopCredentials {
+  rootUrl: string; // e.g. "https://sam.llcoop.org"
+  tz: string; // e.g. US/Eastern
   name: string;
   barcode: string;
   pin: string;
 }
 
-function generateImageUrls(href : string) {
+function generateImageUrls(href : string, llcoopUrl: (string) => string) {
   if (href) {
     var matches = /\/record=([a-zA-Z0-9]+)~/.exec(href);
     if (matches) {
