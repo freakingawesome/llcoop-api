@@ -30,17 +30,22 @@ const getCheckedOutItems = async (cred: LLCoopCredentials) => {
 
       const { title, acknowledgements } = splitTitleAndAcknowledgements(get(".patFuncTitleMain"));
 
+      const status = get(".patFuncStatus").replace(renewed, "").replace(/(\d\d-\d\d)-(\d\d)/, "20$2-$1").trim();
+      const dueMatch = /DUE\s+(\d{4}-\d{2}-\d{2})/.exec(status);
+      const due = dueMatch ? dueMatch[1] : null;
+
       return {
         who: cred.name,
         title,
         acknowledgements,
-        image: generateImageUrl(getAtt(".patFuncTitle a", "href")),
-        status: get(".patFuncStatus").replace(renewed, "").replace(/(\d\d-\d\d)-(\d\d)/, "20$2-$1").trim(),
+        image: generateImageUrls(getAtt(".patFuncTitle a", "href")),
+        status,
+        due,
         renewed,
       };
     });
 
-    result.sort((a:any, b:any) => a.status < b.status ? -1 : (a.status === b.status ? 0 : 1));
+    result.sort((a:any, b:any) => a.due < b.due ? -1 : (a.due === b.due ? 0 : 1));
 
     return result;
   }
@@ -77,11 +82,14 @@ interface LLCoopCredentials {
   pin: string;
 }
 
-function generateImageUrl(href : string) {
+function generateImageUrls(href : string) {
   if (href) {
     var matches = /\/record=([a-zA-Z0-9]+)~/.exec(href);
     if (matches) {
-      return llcoopUrl("/bookjacket?recid=" + matches[1]);
+      return {
+        thumb: llcoopUrl(`/bookjacket?recid=${matches[1]}&size=0`),
+        normal: llcoopUrl(`/bookjacket?recid=${matches[1]}&size=1`),
+      };
     }
   }
   return null;
