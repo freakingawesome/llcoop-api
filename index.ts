@@ -17,9 +17,10 @@ export class LLCoopApi extends cdk.Stack {
       restApiName: 'Lakeland Library Cooperative API'
     });
 
-    const items = api.root.addResource('items');
+    const items = api.root.addResource('api').addResource('library').addResource('items');
     const getAllIntegration = new apigateway.LambdaIntegration(checkedOutResources);
     items.addMethod('POST', getAllIntegration);
+    addCorsOptions(items);
   }
 }
 
